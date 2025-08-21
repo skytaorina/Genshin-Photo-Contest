@@ -6,354 +6,187 @@
   <title>Genshin Photo Contest!</title>
   <style>
     :root { --bg:#0b1020; --card:#111831; --muted:#7c8aad; --text:#e9edf7; --accent:#7aa2ff; }
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b1020,#0b1020 60%,#0e1430);color:var(--text)}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b1020,#0b1020 60%,#0e1430);color:var(--text);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+    .wrap{max-width:1100px;margin:0 auto;padding:clamp(16px,3vw,24px)}
     .card{background:var(--card);border:1px solid #1a2344;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
     h1{font-size:clamp(22px,2.4vw,30px);margin:0 0 8px}
     p.lead{color:var(--muted);margin:0 0 18px}
     .row{display:grid;gap:16px}
     @media(min-width:900px){.row{grid-template-columns:280px 1fr}}
     input[type=file]{display:block;width:100%;padding:10px;background:#0b1228;border:1px dashed #2a3564;color:var(--text);border-radius:12px}
-    button{cursor:pointer;background:var(--accent);color:#061028;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
+    button{cursor:pointer;background:var(--accent);color:#061028;border:0;border-radius:12px;padding:10px 14px;font-weight:700;min-height:44px}
     button:disabled{opacity:.5;cursor:not-allowed}
 
-    /* Theme list */
+    /* Theme list + mobile dropdown */
     .themes{display:flex;flex-direction:column;gap:8px}
     .theme-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:#0b1228;border:1px solid #1a2344;color:var(--text);text-align:left}
-    .theme-btn.active{outline:2px solid var(--accent);}
-    .theme-row{display:flex;gap:8px;align-items:center}
-    .small{font-size:12px}
-    .muted{color:var(--muted)}
+    .theme-btn.active{outline:2px solid var(--accent)}
+    .theme-select{ display:none; width:100%; padding:10px; background:#0b1228; border:1px solid #1a2344; color:var(--text); border-radius:12px }
+    @media (max-width: 720px){ .themes{ display:none } .theme-select{ display:block } .grid{ grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); } .topbar{flex-direction:column; align-items:flex-start; gap:6px;}}
 
-    /* Gallery supports natural aspect ratios */
+    /* Gallery with natural ratios */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
     .photo{background:#0b1228;border:1px solid #1a2344;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
     .photo img{width:100%;height:auto;display:block;background:#0b1228;cursor:zoom-in}
     .meta{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+    .muted{color:var(--muted);font-size:12px}
     .notice{background:#0b1228;border:1px solid #2a3564;border-radius:12px;padding:10px 12px;color:#b8c3e0}
     .inline{display:flex;gap:8px;align-items:center}
     .footer{margin-top:22px;color:#8ea0cc;font-size:12px}
-    code{background:#0b1228;border:1px solid #2a3564;border-radius:6px;padding:2px 6px}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid #2a3564;background:#0b1228}
+    .danger{background:#ff4d6d;color:#161616}
 
     /* Lightbox */
     .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9999}
     .lightbox.open{display:flex}
     .lightbox img{max-width:92vw;max-height:90vh;width:auto;height:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);border-radius:12px}
-    .lightbox .close{position:absolute;top:16px;right:16px;font-size:18px;padding:8px 10px;border-radius:10px;border:1px solid #2a3564;background:#0b1228;color:#e9edf7;cursor:pointer}
+    .lightbox .close{position:absolute;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));font-size:18px;padding:8px 10px;border-radius:10px;border:1px solid #2a3564;background:#0b1228;color:#e9edf7;cursor:pointer}
     .lightbox .caption{position:absolute;bottom:16px;left:16px;right:16px;color:#cfd7f2;font-size:12px;text-align:center}
-
-    /* Top bar */
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-    .pill{padding:6px 10px;border-radius:999px;border:1px solid #2a3564;background:#0b1228}
-    .danger{background:#ff4d6d;color:#161616}
-      /* Mobile-friendly tweaks */
-    html, body { -webkit-text-size-adjust: 100%; }
-    body { -webkit-tap-highlight-color: transparent; }
-    .wrap{ padding: clamp(16px, 3vw, 24px); }
-    button, .theme-btn{ min-height:44px }
-
-    /* Make theme list scrollable chips on small screens */
-    @media (max-width: 900px){
-      .row{ grid-template-columns: 1fr }
-    }
-    @media (max-width: 720px){
-      .themes{ flex-direction: row; overflow-x: auto; gap: 10px; padding-bottom:6px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
-      .theme-btn{ flex: 0 0 auto; min-width: 160px; white-space: nowrap; scroll-snap-align: start; }
-      .topbar{ flex-direction: column; align-items: flex-start; gap: 6px; }
-      .grid{ grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-    }
-
-    /* Safer spacing near phone notches */
-    .lightbox .close{ top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); }
-      /* Mobile dropdown for themes */
-    .theme-select{ display:none; width:100%; padding:10px; background:#0b1228; border:1px solid #1a2344; color:var(--text); border-radius:12px }
-    @media (max-width: 720px){
-      .themes{ display:none }
-      .theme-select{ display:block }
-    }
   </style>
   <script type="module">
-    // ==== 1) YOUR SUPABASE PROJECT INFO =====
-    const SUPABASE_URL = "https://lqjppdwudphgglejgrla.supabase.co";            // e.g. https://abcxyz.supabase.co
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxanBwZHd1ZHBoZ2dsZWpncmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTk2NDgsImV4cCI6MjA3MTM3NTY0OH0.On9zknp3cGr5zmvgU4b1w0043QVyhoeWn42vcyQNX3o";  // Project Settings -> API -> anon public
-    const STORAGE_BUCKET = "photos"; // must exist (public)
+    // ==== Supabase config =====
+    const SUPABASE_URL = "https://lqjppdwudphgglejgrla.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxanBwZHd1ZHBoZ2dsZWpncmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTk2NDgsImV4cCI6MjA3MTM3NTY0OH0.On9zknp3cGr5zmvgU4b1w0043QVyhoeWn42vcyQNX3o";
+    const STORAGE_BUCKET = "photos";
 
     // ==== Contest config =====
     const THEMES = [
       "Theme 1","Theme 2","Theme 3","Theme 4","Theme 5","Theme 6",
       "Theme 7","Theme 8","Theme 9","Theme 10","Theme 11","Theme 12"
     ];
-    const RESET_PASSWORD = "144523"; // <-- your requested reset password
-    const ONE_VOTE_PER_DEVICE_PER_THEME = true; // enforce one vote per theme on this device
+    const RESET_PASSWORD = "144523"; // per-theme reset password
+    const ONE_VOTE_PER_DEVICE_PER_THEME = true;
 
-    // ====== don't edit below unless customizing ======
+    // ====== Implementation ======
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (q, el=document)=> el.querySelector(q);
     const $$ = (qq, el=document)=> Array.from(el.querySelectorAll(qq));
 
-    const ui = { uploadForm:null, fileInput:null, submitBtn:null, gallery:null, status:null,
+    const ui = {
+      uploadForm:null, fileInput:null, submitBtn:null, gallery:null, status:null,
       submissionsCountSpan:null, lightbox:null, lightboxImg:null,
-      themesContainer:null, currentThemeLabel:null, themeSelect:null };
+      themesContainer:null, themeSelect:null, currentThemeLabel:null
+    };
 
-    function slugify(str){
-      return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-    }
+    function slugify(str){ return String(str||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+    function deviceToken(){ const k='apc_device_token'; let t=localStorage.getItem(k); if(!t){t=crypto.randomUUID(); localStorage.setItem(k,t);} return t; }
+    function toast(msg, ok=false){ const el=document.createElement('div'); el.textContent=msg; el.className='notice'; el.style.position='fixed'; el.style.bottom='16px'; el.style.right='16px'; el.style.zIndex=9998; el.style.maxWidth='60ch'; el.style.borderColor = ok?'#0fa':'#2a3564'; document.body.appendChild(el); setTimeout(()=>el.remove(),2600); }
 
-    function deviceToken(){
-      const key = 'apc_device_token';
-      let tok = localStorage.getItem(key);
-      if(!tok){ tok = crypto.randomUUID(); localStorage.setItem(key, tok); }
-      return tok;
-    }
-
-    function toast(msg, ok=false){
-      const el = document.createElement('div');
-      el.textContent = msg; el.className = 'notice';
-      el.style.position='fixed'; el.style.bottom='16px'; el.style.right='16px'; el.style.zIndex=9998; el.style.maxWidth='60ch';
-      el.style.borderColor = ok ? '#0fa' : '#2a3564';
-      document.body.appendChild(el); setTimeout(()=> el.remove(), 2600);
-    }
-
-    // --- theme state ---
-    let CURRENT_THEME = null;      // human label
-    let CURRENT_SLUG  = null;      // slug used for storage path and DB
+    let CURRENT_THEME = null; // human label
+    let CURRENT_SLUG  = null; // slug
 
     function setTheme(themeLabel){
+      if(!themeLabel){ return; }
       CURRENT_THEME = themeLabel;
       CURRENT_SLUG = slugify(themeLabel);
-      ui.currentThemeLabel.textContent = themeLabel;
+      if(ui.currentThemeLabel) ui.currentThemeLabel.textContent = themeLabel;
       if(ui.themeSelect) ui.themeSelect.value = CURRENT_SLUG;
-      const params = new URLSearchParams(location.search);
-      params.set('t', CURRENT_SLUG);
-      history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+      const params = new URLSearchParams(location.search); params.set('t', CURRENT_SLUG); history.replaceState(null,'', `${location.pathname}?${params.toString()}`);
       $$('.theme-btn').forEach(b=> b.classList.toggle('active', b.dataset.slug===CURRENT_SLUG));
-      ui.themesContainer.scrollLeft = 0;
+      if(ui.themesContainer) ui.themesContainer.scrollLeft = 0;
       renderGallery();
     }
 
-    async function ensureSetup(){
-      if(SUPABASE_URL.startsWith('REPLACE') || SUPABASE_ANON_KEY.startsWith('REPLACE')){
-        $('.setupWarning').style.display = 'block';
-      }
-    }
-
-    // --- upload & data ---
     async function uploadPhoto(file){
-      const ext = (file.name.split('.').pop()||'jpg').toLowerCase();
-      const id = crypto.randomUUID();
-      const storage_path = `${CURRENT_SLUG}/${id}.${ext}`; // per-theme folder
-      const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(storage_path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
-      if(upErr){ throw upErr; }
-      const { data: urlData } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(storage_path);
-      const url = urlData.publicUrl;
-      const { error: insErr } = await sb.from('photos').insert({ id, url, theme: CURRENT_SLUG, storage_path });
-      if(insErr){ throw insErr; }
-      return { id, url };
+      const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+      const id=crypto.randomUUID();
+      const storage_path=`${CURRENT_SLUG}/${id}.${ext}`; // theme folder
+      const { error:upErr } = await sb.storage.from(STORAGE_BUCKET).upload(storage_path, file, { cacheControl:'3600', upsert:false, contentType:file.type });
+      if(upErr) throw upErr;
+      const { data:urlData } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(storage_path);
+      const url=urlData.publicUrl;
+      const { error:insErr } = await sb.from('photos').insert({ id, url, theme: CURRENT_SLUG, storage_path });
+      if(insErr) throw insErr;
+      return { id,url };
     }
 
     async function fetchPhotos(){
-      const { data, error } = await sb.from('photos').select('*').eq('theme', CURRENT_SLUG).order('created_at', { ascending: false });
+      const { data, error } = await sb.from('photos').select('*').eq('theme', CURRENT_SLUG).order('created_at', { ascending:false });
       if(error) throw error;
-      // Shuffle for fairness
       for(let i=data.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [data[i],data[j]]=[data[j],data[i]]; }
       return data;
     }
 
-    async function fetchVoteCount(photoId){
-      const { count, error } = await sb.from('votes').select('*', { count: 'exact', head: true }).eq('photo_id', photoId);
-      if(error) throw error; return count||0;
-    }
-
-    async function hasVotedThisTheme(){
-      const tok = deviceToken();
-      const { count, error } = await sb.from('votes').select('*', { count: 'exact', head: true }).eq('device_token', tok).eq('theme', CURRENT_SLUG);
-      if(error) throw error; return (count||0) > 0;
-    }
-
-    async function castVote(photoId){
-      const tok = deviceToken();
-      if(ONE_VOTE_PER_DEVICE_PER_THEME){
-        const voted = await hasVotedThisTheme();
-        if(voted){ toast('You already voted in this theme on this device.', false); return false; }
-      }
-      const { error } = await sb.from('votes').insert({ photo_id: photoId, device_token: tok, theme: CURRENT_SLUG });
-      if(error){
-        if(error.message && error.message.includes('duplicate')){
-          toast('Vote already recorded in this theme for this device.', false);
-          return false;
-        }
-        throw error;
-      }
-      return true;
-    }
+    async function fetchVoteCount(photoId){ const { count, error } = await sb.from('votes').select('*', { count:'exact', head:true }).eq('photo_id', photoId); if(error) throw error; return count||0; }
+    async function hasVotedThisTheme(){ const tok=deviceToken(); const { count, error } = await sb.from('votes').select('*', { count:'exact', head:true }).eq('device_token', tok).eq('theme', CURRENT_SLUG); if(error) throw error; return (count||0)>0; }
+    async function castVote(photoId){ const tok=deviceToken(); if(ONE_VOTE_PER_DEVICE_PER_THEME){ if(await hasVotedThisTheme()){ toast('You already voted in this theme on this device.', false); return false; } } const { error } = await sb.from('votes').insert({ photo_id:photoId, device_token:tok, theme:CURRENT_SLUG }); if(error){ if(error.message?.includes('duplicate')){ toast('Vote already recorded in this theme for this device.', false); return false; } throw error; } return true; }
 
     async function resetCurrentTheme(){
       const pw = prompt('Enter reset password to delete ALL photos and votes in this theme:');
       if(pw !== RESET_PASSWORD){ toast('Wrong password.', false); return; }
       if(!confirm(`Really delete everything in "${CURRENT_THEME}"? This cannot be undone.`)) return;
-
-      // 1) get file paths for this theme
-      const { data: rows, error: selErr } = await sb.from('photos').select('storage_path').eq('theme', CURRENT_SLUG);
+      const { data:rows, error:selErr } = await sb.from('photos').select('storage_path').eq('theme', CURRENT_SLUG);
       if(selErr){ toast('Failed to list photos: '+selErr.message); return; }
-      const toDeletePaths = (rows||[]).map(r=> r.storage_path);
-
-      // 2) delete votes for this theme
-      const { error: delVotesErr } = await sb.from('votes').delete().eq('theme', CURRENT_SLUG);
+      const toDelete=(rows||[]).map(r=> r.storage_path);
+      const { error:delVotesErr } = await sb.from('votes').delete().eq('theme', CURRENT_SLUG);
       if(delVotesErr){ toast('Failed to delete votes: '+delVotesErr.message); return; }
-
-      // 3) delete photos rows for this theme
-      const { error: delPhotosErr } = await sb.from('photos').delete().eq('theme', CURRENT_SLUG);
+      const { error:delPhotosErr } = await sb.from('photos').delete().eq('theme', CURRENT_SLUG);
       if(delPhotosErr){ toast('Failed to delete photos: '+delPhotosErr.message); return; }
-
-      // 4) delete files from storage
-      if(toDeletePaths.length){
-        const { error: storageErr } = await sb.storage.from(STORAGE_BUCKET).remove(toDeletePaths);
-        if(storageErr){ toast('Some files failed to delete: '+storageErr.message); }
-      }
-
-      toast('Theme reset complete.', true);
-      renderGallery();
+      if(toDelete.length){ const { error:storageErr } = await sb.storage.from(STORAGE_BUCKET).remove(toDelete); if(storageErr){ toast('Some files failed to delete: '+storageErr.message); } }
+      toast('Theme reset complete.', true); renderGallery();
     }
 
-    // --- rendering ---
     async function renderThemes(){
-      // Build clickable list
-      ui.themesContainer.innerHTML = '';
-      THEMES.forEach(label=>{
-        const slug = slugify(label);
-        const btn = document.createElement('button');
-        btn.className = 'theme-btn';
-        btn.dataset.slug = slug;
-        btn.innerHTML = `<span>${label}</span>`;
-        btn.onclick = ()=> setTheme(label);
-        ui.themesContainer.appendChild(btn);
-      });
-      ui.themesContainer.scrollLeft = 0;
-
-      // Build mobile dropdown
-      ui.themeSelect.innerHTML = '';
-      THEMES.forEach(label=>{
-        const opt = document.createElement('option');
-        opt.value = slugify(label);
-        opt.textContent = label;
-        ui.themeSelect.appendChild(opt);
-      });
-      if(!ui.themeSelect._bound){
-        ui.themeSelect.addEventListener('change', ()=>{
-          const slug = ui.themeSelect.value;
-          const label = THEMES.find(t=> slugify(t)===slug) || THEMES[0];
-          setTheme(label);
-        });
-        ui.themeSelect._bound = true;
+      // clickable list (desktop)
+      if(ui.themesContainer){
+        ui.themesContainer.innerHTML='';
+        THEMES.forEach(label=>{ const slug=slugify(label); const btn=document.createElement('button'); btn.className='theme-btn'; btn.dataset.slug=slug; btn.innerHTML=`<span>${label}</span>`; btn.onclick=()=> setTheme(label); ui.themesContainer.appendChild(btn); });
       }
-
+      // mobile select
+      if(ui.themeSelect){
+        ui.themeSelect.innerHTML='';
+        THEMES.forEach(label=>{ const opt=document.createElement('option'); opt.value=slugify(label); opt.textContent=label; ui.themeSelect.appendChild(opt); });
+        if(!ui.themeSelect._bound){ ui.themeSelect.addEventListener('change', ()=>{ const slug=ui.themeSelect.value; const label=THEMES.find(t=> slugify(t)===slug) || THEMES[0]; setTheme(label); }); ui.themeSelect._bound=true; }
+      }
       // initial theme from URL or first
-      const urlSlug = new URL(location.href).searchParams.get('t');
-      const initial = THEMES.find(t=> slugify(t)===urlSlug) || THEMES[0];
-      setTheme(initial);
-    }</span>`;
-        btn.onclick = ()=> setTheme(label);
-        ui.themesContainer.appendChild(btn);
-      });
-      // set initial theme from URL ?t=slug or first
-      const urlSlug = new URL(location.href).searchParams.get('t');
-      const initial = THEMES.find(t=> slugify(t)===urlSlug) || THEMES[0];
+      const urlSlug=new URL(location.href).searchParams.get('t');
+      const initial=THEMES.find(t=> slugify(t)===urlSlug) || THEMES[0];
       setTheme(initial);
     }
 
     async function renderGallery(){
-      ui.gallery.innerHTML = '<div class="muted">Loading photos…</div>';
-      const photos = await fetchPhotos();
-      ui.submissionsCountSpan.textContent = photos.length;
-      if(!photos.length){ ui.gallery.innerHTML = '<div class="muted">No photos yet. Be the first to submit!</div>'; return; }
-      const frag = document.createDocumentFragment();
+      if(!CURRENT_SLUG){ return; }
+      ui.gallery.innerHTML='<div class="muted">Loading photos…</div>';
+      const photos=await fetchPhotos();
+      ui.submissionsCountSpan.textContent=photos.length;
+      if(!photos.length){ ui.gallery.innerHTML='<div class="muted">No photos yet. Be the first to submit!</div>'; return; }
+      const frag=document.createDocumentFragment();
       for(const p of photos){
-        const card = document.createElement('div');
-        card.className = 'photo';
-        const img = document.createElement('img');
-        img.loading='lazy'; img.decoding='async';
-        img.src = p.url; img.alt='Contest photo'; img.dataset.id = p.id;
-        img.addEventListener('click', ()=> openLightbox(p.url));
-        const meta = document.createElement('div'); meta.className='meta';
-        const left = document.createElement('div'); left.className='inline';
-        const voteSpan = document.createElement('span'); voteSpan.className='muted'; voteSpan.textContent = '… votes';
-        fetchVoteCount(p.id).then(c=> voteSpan.textContent = `${c} vote${c===1?'':'s'}`);
+        const card=document.createElement('div'); card.className='photo';
+        const img=document.createElement('img'); img.loading='lazy'; img.decoding='async'; img.src=p.url; img.alt='Contest photo'; img.dataset.id=p.id; img.addEventListener('click', ()=> openLightbox(p.url));
+        const meta=document.createElement('div'); meta.className='meta';
+        const left=document.createElement('div'); left.className='inline';
+        const voteSpan=document.createElement('span'); voteSpan.className='muted'; voteSpan.textContent='… votes'; fetchVoteCount(p.id).then(c=> voteSpan.textContent=`${c} vote${c===1?'':'s'}`);
         left.append(voteSpan);
-        const btn = document.createElement('button'); btn.textContent='Vote'; btn.onclick = async ()=>{
-          btn.disabled = true;
-          try{
-            const ok = await castVote(p.id);
-            if(ok){
-              toast('Vote submitted! ✨', true);
-              // refresh counts in current view
-              $$('.photo').forEach(async el=>{
-                const img = $('img', el);
-                const span = $('.muted', el);
-                const c = await fetchVoteCount(img.dataset.id);
-                span.textContent = `${c} vote${c===1?'':'s'}`;
-              });
-            }
-          }catch(e){ console.error(e); toast('Voting failed: '+ (e.message||e)); }
-          finally{ btn.disabled = false; }
-        };
-        meta.append(left, btn);
-        card.append(img, meta);
-        frag.append(card);
+        const btn=document.createElement('button'); btn.textContent='Vote'; btn.onclick=async()=>{ btn.disabled=true; try{ const ok=await castVote(p.id); if(ok){ toast('Vote submitted! ✨', true); $$('.photo').forEach(async el=>{ const img=$('img', el); const span=$('.muted', el); const c=await fetchVoteCount(img.dataset.id); span.textContent=`${c} vote${c===1?'':'s'}`; }); } } catch(e){ console.error(e); toast('Voting failed: '+(e.message||e)); } finally{ btn.disabled=false; } };
+        meta.append(left, btn); card.append(img, meta); frag.append(card);
       }
-      ui.gallery.innerHTML = '';
-      ui.gallery.append(frag);
+      ui.gallery.innerHTML=''; ui.gallery.append(frag);
     }
 
-    // Lightbox helpers
-    function openLightbox(src){
-      ui.lightboxImg.src = src;
-      ui.lightbox.classList.add('open');
-    }
-    function closeLightbox(){
-      ui.lightbox.classList.remove('open');
-      ui.lightboxImg.src = '';
-    }
+    function openLightbox(src){ ui.lightboxImg.src=src; ui.lightbox.classList.add('open'); }
+    function closeLightbox(){ ui.lightbox.classList.remove('open'); ui.lightboxImg.src=''; }
 
     async function main(){
-      ui.uploadForm = $('#uploadForm');
-      ui.fileInput = $('#file');
-      ui.submitBtn = $('#submitBtn');
-      ui.gallery = $('#gallery');
-      ui.status = $('#status');
-      ui.submissionsCountSpan = $('#submissionsCount');
-      ui.themesContainer = $('#themes');
-      ui.currentThemeLabel = $('#currentTheme');
-      ui.themeSelect = $('#themeSelect');
-      ui.lightbox = $('#lightbox');
-      ui.lightboxImg = $('#lightbox-img');
+      ui.uploadForm=$('#uploadForm'); ui.fileInput=$('#file'); ui.submitBtn=$('#submitBtn');
+      ui.gallery=$('#gallery'); ui.status=$('#status'); ui.submissionsCountSpan=$('#submissionsCount');
+      ui.themesContainer=$('#themes'); ui.themeSelect=$('#themeSelect'); ui.currentThemeLabel=$('#currentTheme');
+      ui.lightbox=$('#lightbox'); ui.lightboxImg=$('#lightbox-img');
 
-      await ensureSetup();
+      // build themes & UI
       await renderThemes();
 
-      ui.uploadForm.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const f = ui.fileInput.files?.[0];
-        if(!f){ toast('Pick an image first.'); return; }
-        if(!/^image\//.test(f.type)){ toast('Please upload an image file (JPG/PNG).'); return; }
-        if(f.size > 8*1024*1024){ toast('Max size is 8 MB.'); return; }
-        ui.submitBtn.disabled = true;
-        try{
-          await uploadPhoto(f);
-          toast('Uploaded to '+CURRENT_THEME+'! Your submission is anonymous by default.', true);
-          ui.fileInput.value = '';
-          await renderGallery();
-        }catch(e){ console.error(e); toast('Upload failed: '+ (e.message||e)); }
-        finally{ ui.submitBtn.disabled = false; }
-      });
+      ui.uploadForm.addEventListener('submit', async (e)=>{ e.preventDefault(); const f=ui.fileInput.files?.[0]; if(!f){ toast('Pick an image first.'); return; } if(!/^image\//.test(f.type)){ toast('Please upload an image file (JPG/PNG).'); return; } if(f.size>8*1024*1024){ toast('Max size is 8 MB.'); return; } ui.submitBtn.disabled=true; try{ await uploadPhoto(f); toast(`Uploaded to ${CURRENT_THEME}!`, true); ui.fileInput.value=''; await renderGallery(); } catch(e){ console.error(e); toast('Upload failed: '+(e.message||e)); } finally{ ui.submitBtn.disabled=false; } });
 
-      // Lightbox close interactions
-      ui.lightbox.addEventListener('click', (e)=>{ if(e.target === ui.lightbox) closeLightbox(); });
-      document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeLightbox(); });
+      // Lightbox close
+      ui.lightbox.addEventListener('click', (e)=>{ if(e.target===ui.lightbox) closeLightbox(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeLightbox(); });
       $('#lightbox-close').addEventListener('click', closeLightbox);
 
-      // Reset button
+      // Reset
       $('#resetThemeBtn').addEventListener('click', resetCurrentTheme);
     }
 
@@ -363,16 +196,13 @@
 <body>
   <div class="wrap">
     <div class="card" style="margin-bottom:16px">
-      <div class="topbar">
+      <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
         <h1>Genshin Photo Contest!</h1>
         <span class="pill">Current theme: <b id="currentTheme">—</b></span>
       </div>
       <p class="lead">12 themes • 6 days • Each person can submit to <b>each</b> theme and vote once per theme on a device.</p>
-      <div class="notice setupWarning" style="display:none;margin-bottom:12px">
-        ⚠️ You still need to create the database tables and Storage bucket in Supabase (see notes at the bottom).
-      </div>
       <div class="row">
-        <!-- Left: themes list -->
+        <!-- Left: themes list / selector -->
         <div class="card" style="padding:12px">
           <h3 style="margin:4px 0 8px">Themes</h3>
           <select id="themeSelect" class="theme-select" aria-label="Select theme"></select>
@@ -382,7 +212,7 @@
           </div>
         </div>
 
-        <!-- Right: upload / vote -->
+        <!-- Right: upload and gallery -->
         <div>
           <form id="uploadForm" class="card" style="padding:12px; margin-bottom:16px">
             <h3 style="margin:4px 0 8px">Submit to this theme</h3>
@@ -406,7 +236,6 @@
     </div>
 
     <div class="footer">
-      <p class="muted"></p>
       <small>© 2025 <strong>Skytao</strong>. All rights reserved.</small>
     </div>
   </div>
