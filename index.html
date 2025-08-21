@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Genshin Photo Contest!!</title>
+  <title>Genshin Photo Contest!</title>
   <style>
     :root { --bg:#0b1020; --card:#111831; --muted:#7c8aad; --text:#e9edf7; --accent:#7aa2ff; }
     *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b1020,#0b1020 60%,#0e1430);color:var(--text)}
@@ -17,7 +17,7 @@
     button{cursor:pointer;background:var(--accent);color:#061028;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
     button:disabled{opacity:.5;cursor:not-allowed}
 
-    /* Theme list! */
+    /* Theme list */
     .themes{display:flex;flex-direction:column;gap:8px}
     .theme-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:#0b1228;border:1px solid #1a2344;color:var(--text);text-align:left}
     .theme-btn.active{outline:2px solid var(--accent);}
@@ -65,6 +65,12 @@
 
     /* Safer spacing near phone notches */
     .lightbox .close{ top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); }
+      /* Mobile dropdown for themes */
+    .theme-select{ display:none; width:100%; padding:10px; background:#0b1228; border:1px solid #1a2344; color:var(--text); border-radius:12px }
+    @media (max-width: 720px){
+      .themes{ display:none }
+      .theme-select{ display:block }
+    }
   </style>
   <script type="module">
     // ==== 1) YOUR SUPABASE PROJECT INFO =====
@@ -74,7 +80,7 @@
 
     // ==== Contest config =====
     const THEMES = [
-      "Theme 1 - Ororon","Theme 2 - Yanfei","Theme 3","Theme 4","Theme 5","Theme 6",
+      "Theme 1","Theme 2","Theme 3","Theme 4","Theme 5","Theme 6",
       "Theme 7","Theme 8","Theme 9","Theme 10","Theme 11","Theme 12"
     ];
     const RESET_PASSWORD = "144523"; // <-- your requested reset password
@@ -87,11 +93,9 @@
     const $ = (q, el=document)=> el.querySelector(q);
     const $$ = (qq, el=document)=> Array.from(el.querySelectorAll(qq));
 
-    const ui = {
-      uploadForm:null, fileInput:null, submitBtn:null, gallery:null, status:null,
+    const ui = { uploadForm:null, fileInput:null, submitBtn:null, gallery:null, status:null,
       submissionsCountSpan:null, lightbox:null, lightboxImg:null,
-      themesContainer:null, currentThemeLabel:null
-    };
+      themesContainer:null, currentThemeLabel:null, themeSelect:null };
 
     function slugify(str){
       return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
@@ -120,11 +124,12 @@
       CURRENT_THEME = themeLabel;
       CURRENT_SLUG = slugify(themeLabel);
       ui.currentThemeLabel.textContent = themeLabel;
+      if(ui.themeSelect) ui.themeSelect.value = CURRENT_SLUG;
       const params = new URLSearchParams(location.search);
       params.set('t', CURRENT_SLUG);
       history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
-      // update active button
       $$('.theme-btn').forEach(b=> b.classList.toggle('active', b.dataset.slug===CURRENT_SLUG));
+      ui.themesContainer.scrollLeft = 0;
       renderGallery();
     }
 
@@ -214,6 +219,7 @@
 
     // --- rendering ---
     async function renderThemes(){
+      // Build clickable list
       ui.themesContainer.innerHTML = '';
       THEMES.forEach(label=>{
         const slug = slugify(label);
@@ -221,6 +227,33 @@
         btn.className = 'theme-btn';
         btn.dataset.slug = slug;
         btn.innerHTML = `<span>${label}</span>`;
+        btn.onclick = ()=> setTheme(label);
+        ui.themesContainer.appendChild(btn);
+      });
+      ui.themesContainer.scrollLeft = 0;
+
+      // Build mobile dropdown
+      ui.themeSelect.innerHTML = '';
+      THEMES.forEach(label=>{
+        const opt = document.createElement('option');
+        opt.value = slugify(label);
+        opt.textContent = label;
+        ui.themeSelect.appendChild(opt);
+      });
+      if(!ui.themeSelect._bound){
+        ui.themeSelect.addEventListener('change', ()=>{
+          const slug = ui.themeSelect.value;
+          const label = THEMES.find(t=> slugify(t)===slug) || THEMES[0];
+          setTheme(label);
+        });
+        ui.themeSelect._bound = true;
+      }
+
+      // initial theme from URL or first
+      const urlSlug = new URL(location.href).searchParams.get('t');
+      const initial = THEMES.find(t=> slugify(t)===urlSlug) || THEMES[0];
+      setTheme(initial);
+    }</span>`;
         btn.onclick = ()=> setTheme(label);
         ui.themesContainer.appendChild(btn);
       });
@@ -292,6 +325,7 @@
       ui.submissionsCountSpan = $('#submissionsCount');
       ui.themesContainer = $('#themes');
       ui.currentThemeLabel = $('#currentTheme');
+      ui.themeSelect = $('#themeSelect');
       ui.lightbox = $('#lightbox');
       ui.lightboxImg = $('#lightbox-img');
 
@@ -341,6 +375,7 @@
         <!-- Left: themes list -->
         <div class="card" style="padding:12px">
           <h3 style="margin:4px 0 8px">Themes</h3>
+          <select id="themeSelect" class="theme-select" aria-label="Select theme"></select>
           <div id="themes" class="themes"></div>
           <div class="inline" style="margin-top:12px; gap:10px">
             <button id="resetThemeBtn" class="danger" title="Deletes all photos & votes for this theme">Reset this theme</button>
@@ -371,7 +406,8 @@
     </div>
 
     <div class="footer">
-      <p class="muted">© 2025 Skytao. All rights reserved.</p>
+      <p class="muted"></p>
+      <small>© 2025 <strong>Skytao</strong>. All rights reserved.</small>
     </div>
   </div>
 
