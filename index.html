@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Genshin Photo Contest!</title>
+  <title>2025 Photo Contest!</title>
   <style>
     :root { --bg:#0b1020; --card:#111831; --muted:#7c8aad; --text:#e9edf7; --accent:#7aa2ff; }
     *{box-sizing:border-box}
@@ -176,7 +176,7 @@
 
     function openLightbox(src){ ui.lightboxImg.src=src; ui.lightbox.classList.add('open'); }
     function closeLightbox(){ ui.lightbox.classList.remove('open'); ui.lightboxImg.src=''; }
-
+```
     function makeDraggable(el, key = 'pet_pos') {
       el.setAttribute('draggable','false');
       try { const saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved && typeof saved.x==='number' && typeof saved.y==='number') { el.style.left = saved.x + 'px'; el.style.top = saved.y + 'px'; el.style.right='auto'; el.style.bottom='auto'; } } catch {}
@@ -190,6 +190,7 @@
         window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
       });
     }
+    ```
 
     async function main(){
       ui.uploadForm=$('#uploadForm'); ui.fileInput=$('#file'); ui.submitBtn=$('#submitBtn');
@@ -209,13 +210,13 @@
 
       // Reset
       $('#resetThemeBtn').addEventListener('click', resetCurrentTheme);
-
+```
       // Draggable gif init
       const pet = document.getElementById('pet');
       const isDesktop = window.matchMedia('(pointer: fine)').matches && !('ontouchstart' in window);
       if (pet && isDesktop) makeDraggable(pet);
     }
-
+```
     window.addEventListener('DOMContentLoaded', main);
   </script>
 </head>
@@ -261,7 +262,7 @@
     </div>
 
     <div class="footer">
-      <small>© 2025 <strong>Skytao</strong>. All rights reserved.</small>
+      <small>© 2025 <strong>Seo.Vkim</strong>. All rights reserved.</small>
     </div>
   </div>
 
@@ -272,6 +273,6 @@
     <div class="caption muted">Click outside or press Esc to close</div>
   </div>
   <!-- Draggable fun gif -->
-  <img id="pet" src="SkyPatsMua.gif" alt="Sky pats" draggable="false" />
+   <!-- <img id="pet" src="SkyPatsMua.gif" alt="Sky pats" draggable="false" /> -->
 </body>
 </html>
